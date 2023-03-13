@@ -2,13 +2,14 @@
 
 extern crate panic_itm;
 
-use stm32f4xx_hal::{pac::Peripherals};
+use stm32f4xx_hal::pac::Peripherals;
 
 pub mod settings;
-mod constants;
 
 use settings::{ClockSource, SysTickSource, PLLP, AHBFactor, APBxFactor};
-use constants::{pll_p_scale, ahb_scale, apbx_scale};
+
+const HSI_FREQ: u32 = MILLION!(16);
+const HSE_FREQ: u32 = MILLION!(8);
 
 // input  = HSE || HSI
 //          input / M       should be 2MHz
@@ -30,13 +31,6 @@ pub struct ClockInit
     pub ahb_pre: AHBFactor,
     pub apb2_pre: APBxFactor,
     pub apb1_pre: APBxFactor,
-
-    pub ahb1_enr: u32,
-    pub ahb2_enr: u32,
-    pub ahb3_enr: u32,
-    pub apb2_enr: u32,
-    pub apb1_enr: u32,
-
 }
 
 pub struct ClockSpeeds
@@ -119,13 +113,6 @@ fn enable_clocks(init: ClockInit, periphs: &Peripherals) -> ClockSpeeds {
         }
     });
 
-    // enable peripherals
-    periphs.RCC.ahb1enr.write(|w| unsafe { w.bits(init.ahb1_enr) });
-    periphs.RCC.ahb2enr.write(|w| unsafe { w.bits(init.ahb2_enr) });
-    periphs.RCC.ahb3enr.write(|w| unsafe { w.bits(init.ahb3_enr) });
-    periphs.RCC.apb2enr.write(|w| unsafe { w.bits(init.apb2_enr) });
-    periphs.RCC.apb1enr.write(|w| unsafe { w.bits(init.apb1_enr) });
-
     // set TIMPRE bit
     periphs.RCC.dckcfgr.write(|w| w.timpre().bit(init.timpre));
 
@@ -143,12 +130,11 @@ fn enable_clocks(init: ClockInit, periphs: &Peripherals) -> ClockSpeeds {
 }
 
 fn calculate_clockspeeds(init: &ClockInit) -> ClockSpeeds {
-    use constants::{HSI_FREQ, HSE_FREQ};
 
     let pll_base = if init.pll_source_hse == Some(true) { HSE_FREQ } else { HSI_FREQ };
     let pll_input = pll_base / init.pll_m as u32;
     let pll_vco = pll_input * init.pll_n as u32;
-    let pll_output = pll_vco / pll_p_scale(init.pll_p);
+    let pll_output = pll_vco / Into::<u32>::into(init.pll_p);
 
     if pll_vco < MILLION!(100) || pll_vco > MILLION!(432) { panic!("Invalid PLL VCO frequency") };
     if pll_input != MILLION!(2) { panic!("Invalid PLL input frequency") };
@@ -160,10 +146,10 @@ fn calculate_clockspeeds(init: &ClockInit) -> ClockSpeeds {
         ClockSource::Pll => pll_output,
     };
 
-    let hclk = sysclk / ahb_scale(init.ahb_pre);
+    let hclk = sysclk / Into::<u32>::into(init.ahb_pre);
     if hclk > MILLION!(180) { panic!("HCLK frequency too high") };
-    let apb2pre = apbx_scale(init.apb2_pre);
-    let apb1pre = apbx_scale(init.apb1_pre);
+    let apb2pre: u32 = init.apb2_pre.into();
+    let apb1pre: u32 = init.apb1_pre.into();
     let pclk2 = hclk / apb2pre;
     let pclk1 = hclk / apb1pre;
     if pclk2 > MILLION!(90) || pclk1 > MILLION!(45) { panic!("Invalid peripheral clock frequency") };
@@ -217,4 +203,11 @@ fn osc_config(init: &ClockInit, periphs: &Peripherals) -> () {
         periphs.RCC.cr.modify(|_, w| w.pllon().on());
         while periphs.RCC.cr.read().pllrdy().is_not_ready() {};
     }
+}
+
+#[macro_export]
+macro_rules! MILLION {
+    ($n:expr) => {
+        $n * 1000000u32
+    };
 }

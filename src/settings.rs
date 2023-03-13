@@ -16,6 +16,7 @@ pub enum ClockSource {
 }
 
 impl Into<SW_A> for ClockSource {
+    #[inline(always)]
     fn into(self) -> SW_A {
         match self {
             ClockSource::Hse => SW_A::Hse,
@@ -26,6 +27,7 @@ impl Into<SW_A> for ClockSource {
 }
 
 impl Into<Option<SWS_A>> for ClockSource {
+    #[inline(always)]
     fn into(self) -> Option<SWS_A> {
         match self {
             ClockSource::Hse => Some(SWS_A::Hse),
@@ -45,7 +47,20 @@ pub enum PLLP {
 }
 
 impl Into<u8> for PLLP {
+    #[inline(always)]
     fn into(self) -> u8 {
+        match self {
+            PLLP::Two => 0b00,
+            PLLP::Four => 0b01,
+            PLLP::Six => 0b10,
+            PLLP::Eight => 0b11
+        }
+    }
+}
+
+impl Into<u32> for PLLP {
+    #[inline(always)]
+    fn into(self) -> u32 {
         match self {
             PLLP::Two => 0b00,
             PLLP::Four => 0b01,
@@ -70,17 +85,35 @@ pub enum AHBFactor {
 }
 
 impl Into<HPRE_A> for AHBFactor {
+    #[inline(always)]
     fn into(self) -> HPRE_A {
         match self {
-            AHBFactor::One => HPRE_A::Div1,
-            AHBFactor::Two => HPRE_A::Div2,
-            AHBFactor::Four => HPRE_A::Div4,
-            AHBFactor::Eight => HPRE_A::Div8,
-            AHBFactor::Sixteen => HPRE_A::Div16,
-            AHBFactor::SixtyFour => HPRE_A::Div64,
+            AHBFactor::One                   => HPRE_A::Div1,
+            AHBFactor::Two                   => HPRE_A::Div2,
+            AHBFactor::Four                  => HPRE_A::Div4,
+            AHBFactor::Eight                 => HPRE_A::Div8,
+            AHBFactor::Sixteen               => HPRE_A::Div16,
+            AHBFactor::SixtyFour             => HPRE_A::Div64,
             AHBFactor::OneHundredTwentyEight => HPRE_A::Div128,
-            AHBFactor::TwoHundredFiftySix => HPRE_A::Div256,
-            AHBFactor::FiveHundredTwelve => HPRE_A::Div512,
+            AHBFactor::TwoHundredFiftySix    => HPRE_A::Div256,
+            AHBFactor::FiveHundredTwelve     => HPRE_A::Div512,
+        }
+    }
+}
+
+impl Into<u32> for AHBFactor {
+    #[inline(always)]
+    fn into(self) -> u32 {
+        match self {
+            AHBFactor::One                   => 1,
+            AHBFactor::Two                   => 2,
+            AHBFactor::Four                  => 4,
+            AHBFactor::Eight                 => 8,
+            AHBFactor::Sixteen               => 16,
+            AHBFactor::SixtyFour             => 64,
+            AHBFactor::OneHundredTwentyEight => 128,
+            AHBFactor::TwoHundredFiftySix    => 256,
+            AHBFactor::FiveHundredTwelve     => 512,
         }
     }
 }
@@ -103,6 +136,19 @@ impl Into<PPRE1_A> for APBxFactor {
             APBxFactor::Four => PPRE1_A::Div4,
             APBxFactor::Eight => PPRE1_A::Div8,
             APBxFactor::Sixteen => PPRE1_A::Div16
+        }
+    }
+}
+
+impl Into<u32> for APBxFactor {
+    #[inline(always)]
+    fn into(self) -> u32 {
+        match self {
+            APBxFactor::One => 1,
+            APBxFactor::Two => 2,
+            APBxFactor::Four => 4,
+            APBxFactor::Eight => 8,
+            APBxFactor::Sixteen => 16
         }
     }
 }
