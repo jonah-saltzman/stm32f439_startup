@@ -46,13 +46,28 @@ pub struct ClockSpeeds
     pub systickclk: u32,
 }
 
-pub fn init(init: ClockInit, periphs: &mut Peripherals) -> ClockSpeeds {
+pub fn init_clocks(init: ClockInit, periphs: &Peripherals) -> ClockSpeeds 
+{
     let frequencies = enable_clocks(init, periphs);
-    enable_uart3(periphs);
+    enable_core_periphs(periphs);
     frequencies
 }
 
-fn enable_uart3(periphs: &Peripherals) -> () {
+pub fn print(periphs: &Peripherals, msg: &str) {
+    for c in msg.bytes() {
+        uart3_writechar(periphs, u16::from(c))
+    }
+}
+
+fn uart3_writechar(periphs: &Peripherals, char: u16) {
+    while periphs.USART3.sr.read().txe().bit_is_clear() {}
+    periphs.USART3.dr.write(|w| w.dr().bits(char))
+}
+
+fn enable_core_periphs(periphs: &Peripherals) -> () {
+    periphs.RCC.ahb1enr.modify(|_, w| w.gpioden().enabled());
+    periphs.RCC.apb1enr.modify(|_, w| w.pwren().enabled().usart3en().enabled());
+    periphs.RCC.apb2enr.modify(|_, w| w.syscfgen().enabled());
     periphs.GPIOD.moder.write(|w| w.moder8().alternate().moder9().alternate());
     periphs.GPIOD.afrh.write(|w| w.afrh8().af7().afrh9().af7());
     periphs.USART3.cr1.modify(|_, w| w.ue().enabled());

@@ -62,10 +62,10 @@ impl Into<u32> for PLLP {
     #[inline(always)]
     fn into(self) -> u32 {
         match self {
-            PLLP::Two => 0b00,
-            PLLP::Four => 0b01,
-            PLLP::Six => 0b10,
-            PLLP::Eight => 0b11
+            PLLP::Two => 2,
+            PLLP::Four => 4,
+            PLLP::Six => 6,
+            PLLP::Eight => 8
         }
     }
 }

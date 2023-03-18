@@ -7,6 +7,7 @@ authors = ["Jonah Saltzman <jonahsaltzman@gmail.com>"]
 [dependencies]
 cortex-m-rt = "0.7.3"
 panic-itm = "0.4.2"
+stm32f4 = "0.15.1"
 
 [dependencies.cortex-m]
 version = "0.7.7"
